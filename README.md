@@ -1,167 +1,52 @@
-# go-jmp
+# jmp
 
-go-jmp is a Go implementation of `jmp`: a terminal workflow tool for jumping from search results and command output directly into your editor.
+**Stop copying filenames from terminal output. Start jumping.**
 
-It is designed to preserve the command contract and day-to-day behavior of the Raku version while producing a widely deployable Go binary.
+`jmp` searches your codebase and parses command output to find files and line numbers, then opens them directly in your editor. No more copy-pasting paths.
 
-## Install Binary (Recommended)
+```bash
+jmp to 'parse error'        # search code, jump to matches
+jmp on 'git status'          # parse command output, jump to files
+jmp edit main.go 42          # open file at line 42
+```
 
-Install the latest release binary in one command:
+## Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nige123/go-jmp.nigelhamilton.com/main/scripts/install.sh | bash
 ```
 
-The installer:
+This detects your OS/architecture, downloads the right binary, and installs to `~/.local/bin/jmp`.
 
-- detects your OS and CPU architecture
-- downloads the correct GitHub Release asset
-- verifies checksum when available
-- installs `jmp` to `~/.local/bin/jmp`
-
-If `~/.local/bin` is not on your PATH:
+Add to your PATH if needed:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Install a specific version (example `v55`):
-
-```bash
-JMP_VERSION=v55 curl -fsSL https://raw.githubusercontent.com/nige123/go-jmp.nigelhamilton.com/main/scripts/install.sh | bash
-```
-
-Manual download option:
-
-- Go to Releases: https://github.com/nige123/go-jmp.nigelhamilton.com/releases
-- Download your matching archive (`linux-amd64`, `linux-arm64`, `darwin-amd64`, `darwin-arm64`, `windows-amd64`, `windows-arm64`)
-- Extract and place the `jmp` binary on your PATH
-
-## Quick Start
-
-Build locally:
-
-```bash
-go mod tidy
-go build -o jmp ./cmd/jmp
-./jmp version
-```
-
-Install into your Go bin:
-
-```bash
-go install ./cmd/jmp
-```
-
-If needed:
-
-```bash
-export PATH="$HOME/go/bin:$PATH"
-```
+Or download manually from [Releases](https://github.com/nige123/go-jmp.nigelhamilton.com/releases).
 
 ## First Run
-
-Run:
 
 ```bash
 jmp config
 ```
 
-This opens `~/.jmp`, where you configure:
-
-- `editor.command.template`
-- `find.command.template`
-- `browser.command.template`
-
-Default search uses ripgrep (`rg`) in stable `file:line:text` mode.
+This opens `~/.jmp` where you set your editor, search tool, and browser commands.
 
 ## Commands
 
 ```text
-jmp                                         show most recent hits
-jmp back [count]                            show recent history (default 100)
-jmp to '[<search-terms> ...]'               search files and jump to matching lines
-jmp on '<command ...>'                      parse files from command output (stdout + stderr)
-jmp edit <filename> [<line-number>]         start editing at a line number
-jmp edit <filename> '[<search-terms> ...]'  start editing at a matching line
-jmp config                                  edit ~/.jmp config
-jmp help                                    show command help
-jmp version                                 show version
+jmp                          show most recent hits
+jmp to '<search-terms>'      search files and jump to matches
+jmp on '<command>'           parse command output for files
+jmp edit <file> [<line>]     open file at a line number
+jmp back [count]             show recent history
+jmp config                   edit config
+jmp help                     show help
+jmp version                  show version
 ```
 
-Compatibility behavior:
+## Feedback
 
-- `jmp on` with no command defaults to history view.
-- Unknown top-level command falls through to command-output mode.
-
-## TUI Controls
-
-- Up/Down: move selection
-- Right/Enter on results: open preview
-- Right/Enter on preview: open editor at selected line
-- Left/Esc in preview: return to results
-- `t`: new `jmp to` query in title bar
-- `o`: new `jmp on` command in title bar
-- `h` or `?`: help in preview
-- `q` or `x`: quit
-
-## Visual Layout
-
-- Double-line outer frame
-- Single-line separators between title, results, preview, and footer
-- Fixed 15-row results pane
-- Static title bar showing current command
-- Green inverse highlight for selected row
-- Centered footer actions with right-aligned version text
-
-## Common Workflows
-
-Search code and jump:
-
-```bash
-jmp to parser token
-```
-
-Jump from command output:
-
-```bash
-jmp on git status
-jmp on tail -n 200 /var/log/syslog
-```
-
-Open directly:
-
-```bash
-jmp edit pkg/tui/ui.go 120
-```
-
-## Build, Test, Release
-
-Run tests:
-
-```bash
-go test ./...
-```
-
-Build local binary:
-
-```bash
-go build -o jmp ./cmd/jmp
-```
-
-Cross-platform artifacts:
-
-```bash
-make cross
-```
-
-Release automation:
-
-- `.github/workflows/release.yml`
-- `.goreleaser.yml`
-
-## Documentation
-
-- Migration plan: `MIGRATION_PLAN.md`
-- Release history: `CHANGES.md`
-- Agent guidance: `AGENTS.md` and `agents/`
+This is a Go port of the original [Raku jmp](https://github.com/nige123/jmp.nigelhamilton.com). For feature requests, bug reports, and feedback, please use the issues on the [Raku repo](https://github.com/nige123/jmp.nigelhamilton.com/issues).
