@@ -11,6 +11,8 @@ permissions:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,10 +20,15 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: stable
 
       - name: Run tests
         run: go test ./...
+
+      - name: Check git state
+        run: |
+          git status
+          git diff
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
