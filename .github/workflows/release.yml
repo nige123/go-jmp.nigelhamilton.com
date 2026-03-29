@@ -7,13 +7,10 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
-    env:
-      GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,34 +23,11 @@ jobs:
       - name: Run tests
         run: go test ./...
 
-      - name: Check git state
-        run: |
-          git status
-          git diff
-
-      - name: Install GoReleaser
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          install-only: true
-
-      - name: Run GoReleaser
-        run: |
-          goreleaser release --clean --verbose > /tmp/goreleaser.log 2>&1 || true
-          echo '## GoReleaser Output' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/goreleaser.log >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Post goreleaser log to issue
-        if: always()
-        run: |
-          BODY=$(cat /tmp/goreleaser.log 2>/dev/null || echo "No log file found")
-          gh issue create --title "GoReleaser CI debug log $(date -u +%H:%M:%S)" --body "\`\`\`
-          $BODY
-          \`\`\`" --repo "$GITHUB_REPOSITORY"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
