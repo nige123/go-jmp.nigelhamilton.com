@@ -54,7 +54,8 @@ func NewUI(title string, editor *editor.Editor, hits []model.Renderable, searche
         previewLines: []string{
             "Press Right Arrow on a result to preview the file here.",
             "Press Right Arrow again in this pane to open the editor.",
-            "Press [o] in results to run a command and jump on its output.",
+	    "Press [t] to jump to keyword locations in files.",
+            "Press [o] to run a command and jump on its output.",
         },
         previewStart: 1,
         previewLine:  1,
@@ -272,12 +273,14 @@ func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
         return u, nil
     case "right", "enter":
         if u.focus == "preview" {
+            var redraw tea.Cmd
             if u.previewHit != nil && u.Editor != nil {
                 hit := *u.previewHit
                 hit.LineNumber = u.previewLine
                 _ = u.Editor.Edit(u.Title, &hit)
+                redraw = tea.Batch(tea.EnterAltScreen, tea.ClearScreen)
             }
-            return u, nil
+            return u, redraw
         }
         u.previewSelectedHit()
         return u, nil
@@ -352,16 +355,22 @@ func (u *UI) resolveEditableHit(hit model.Renderable) *file.Hit {
 
 func (u *UI) View() string {
     width := u.width
-    if width < 40 {
+    if width < 50 {
         width = 80
     }
     height := u.height
     if height < 18 {
         height = 24
     }
+    innerWidth := width - 2
+    if innerWidth < 20 {
+        innerWidth = 20
+    }
 
     resultsHeight := 15
-    previewHeight := height - (1 + resultsHeight + 1)
+    // Full frame uses: top border, title, sep, results, sep, preview, sep, footer, bottom border.
+    const nonPreviewRows = 8
+    previewHeight := height - (resultsHeight + nonPreviewRows)
     if previewHeight < 1 {
         previewHeight = 1
     }
@@ -369,9 +378,9 @@ func (u *UI) View() string {
     title := u.Title
     if u.mode == "input" {
         if u.inputContext == "output" {
-            title = "jmp on " + u.outputBuffer + "▌"
+            title = "jmp on " + u.outputBuffer + greenCursor()
         } else {
-            title = "jmp to " + u.searchBuffer + "▌"
+            title = "jmp to " + u.searchBuffer + greenCursor()
         }
     }
 
@@ -383,31 +392,36 @@ func (u *UI) View() string {
         footer += "  [o]n cmd"
     }
     footer += "  [h]elp  [q]uit"
-    footer = u.renderFooter(footer, "go-jmp v"+version.VERSION, width)
+    footer = u.renderFooter(footer, "go-jmp v"+version.VERSION, innerWidth)
 
-    title = fitToWidth(title, width)
+    title = fitToWidth(title, innerWidth)
 
     resultLines := make([]string, 0, resultsHeight)
     if len(u.Hits) == 0 {
-        resultLines = append(resultLines, fitToWidth("(no output lines)", width))
+        resultLines = append(resultLines, fitToWidth("(no output lines)", innerWidth))
         for len(resultLines) < resultsHeight {
-            resultLines = append(resultLines, strings.Repeat(" ", width))
+            resultLines = append(resultLines, strings.Repeat(" ", innerWidth))
         }
     } else {
         start := u.resultsWindowStart(resultsHeight)
         for row := 0; row < resultsHeight; row++ {
             i := start + row
             if i >= len(u.Hits) {
-                resultLines = append(resultLines, strings.Repeat(" ", width))
+                resultLines = append(resultLines, strings.Repeat(" ", innerWidth))
                 continue
             }
 
             hit := u.Hits[i]
             prefix := "  "
-            if u.focus == "results" && i == u.selectedIndex {
+            selected := u.focus == "results" && i == u.selectedIndex
+            if selected {
                 prefix = "> "
             }
-            resultLines = append(resultLines, fitToWidth(prefix+hit.Render(), width))
+            line := fitToWidth(prefix+hit.Render(), innerWidth)
+            if selected {
+                line = greenInverse(line)
+            }
+            resultLines = append(resultLines, line)
         }
     }
 
@@ -416,25 +430,40 @@ func (u *UI) View() string {
     for row := 0; row < previewHeight; row++ {
         idx := previewOffset + row
         if idx >= len(u.previewLines) {
-            previewLines = append(previewLines, strings.Repeat(" ", width))
+            previewLines = append(previewLines, strings.Repeat(" ", innerWidth))
             continue
         }
 
         line := u.previewLines[idx]
         current := u.previewStart + idx
         prefix := "  "
-        if u.focus == "preview" && current == u.previewLine {
+        selected := u.focus == "preview" && current == u.previewLine
+        if selected {
             prefix = "> "
         }
-        previewLines = append(previewLines, fitToWidth(prefix+line, width))
+        renderedLine := fitToWidth(prefix+line, innerWidth)
+        if selected {
+            renderedLine = greenInverse(renderedLine)
+        }
+        previewLines = append(previewLines, renderedLine)
     }
 
-    return strings.Join([]string{
-        title,
-        strings.Join(resultLines, "\n"),
-        strings.Join(previewLines, "\n"),
-        footer,
-    }, "\n")
+    rendered := make([]string, 0, 4+len(resultLines)+len(previewLines))
+    rendered = append(rendered, "╔"+strings.Repeat("═", innerWidth)+"╗")
+    rendered = append(rendered, "║"+title+"║")
+    rendered = append(rendered, "╟"+strings.Repeat("─", innerWidth)+"╢")
+    for _, line := range resultLines {
+        rendered = append(rendered, "║"+line+"║")
+    }
+    rendered = append(rendered, "╟"+strings.Repeat("─", innerWidth)+"╢")
+    for _, line := range previewLines {
+        rendered = append(rendered, "║"+line+"║")
+    }
+    rendered = append(rendered, "╟"+strings.Repeat("─", innerWidth)+"╢")
+    rendered = append(rendered, "║"+footer+"║")
+    rendered = append(rendered, "╚"+strings.Repeat("═", innerWidth)+"╝")
+
+    return strings.Join(rendered, "\n")
 }
 
 func (u *UI) resultsWindowStart(windowSize int) int {
@@ -485,14 +514,17 @@ func (u *UI) renderFooter(actions, versionText string, width int) string {
         return fitToWidth(versionText, width)
     }
 
-    actions = fitToWidth(actions, actionsWidth)
+    actions = clipToWidth(actions, actionsWidth)
     actionsLen := utf8.RuneCountInString(actions)
     paddingLeft := 0
+    paddingRight := 0
     if actionsWidth > actionsLen {
-        paddingLeft = (actionsWidth - actionsLen) / 2
+        totalPadding := actionsWidth - actionsLen
+        paddingLeft = totalPadding / 2
+        paddingRight = totalPadding - paddingLeft
     }
 
-    left := strings.Repeat(" ", paddingLeft) + actions
+    left := strings.Repeat(" ", paddingLeft) + actions + strings.Repeat(" ", paddingRight)
     left = fitToWidth(left, actionsWidth)
 
     return left + " " + versionText
@@ -507,6 +539,22 @@ func fitToWidth(line string, width int) string {
         return line + strings.Repeat(" ", width-len(runes))
     }
     return line
+}
+
+func clipToWidth(line string, width int) string {
+    runes := []rune(line)
+    if len(runes) > width {
+        return string(runes[:width])
+    }
+    return line
+}
+
+func greenInverse(line string) string {
+    return "\x1b[7;32m" + line + "\x1b[0m"
+}
+
+func greenCursor() string {
+    return "\x1b[32m▌\x1b[0m"
 }
 
 func (u *UI) Display() error {
