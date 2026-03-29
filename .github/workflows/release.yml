@@ -30,11 +30,14 @@ jobs:
           git status
           git diff
 
-      - name: Run GoReleaser
+      - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          install-only: true
+
+      - name: Run GoReleaser
+        run: goreleaser release --clean --verbose 2>&1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
