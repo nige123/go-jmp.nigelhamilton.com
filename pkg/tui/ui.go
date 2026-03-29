@@ -209,13 +209,13 @@ func (u *UI) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
     switch msg.String() {
     case "ctrl+c", "q", "x":
-        return u, tea.Sequence(tea.ExitAltScreen, tea.Quit)
+        return u, tea.Quit
     case "esc":
         if u.focus == "preview" {
             u.focus = "results"
             return u, nil
         }
-        return u, tea.Sequence(tea.ExitAltScreen, tea.Quit)
+        return u, tea.Quit
     case "h", "?":
         u.focus = "preview"
         u.previewHit = nil
@@ -561,5 +561,6 @@ func (u *UI) Display() error {
     model := u
     program := tea.NewProgram(model, tea.WithAltScreen())
     _, err := program.Run()
+    fmt.Print("\033[H\033[2J")
     return err
 }
