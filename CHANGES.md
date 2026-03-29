@@ -1,5 +1,20 @@
 # CHANGES
 
+## v55 - 2026-03-29
+
+Release focus: one-command binary installation for end users.
+
+### Added
+
+- `scripts/install.sh` installer for GitHub Release binaries.
+- Automatic OS/architecture detection in installer.
+- Optional pinned version install via `JMP_VERSION` environment variable.
+- Checksum verification path during install when release checksums are available.
+
+### Changed
+
+- README now has a dedicated binary install section with one-command install and manual release-download guidance.
+
 ## v54 - 2026-03-29
 
 Release focus: Go-port usability, TUI parity, and deployment readiness.

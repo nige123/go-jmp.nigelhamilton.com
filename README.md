@@ -4,6 +4,39 @@ go-jmp is a Go implementation of `jmp`: a terminal workflow tool for jumping fro
 
 It is designed to preserve the command contract and day-to-day behavior of the Raku version while producing a widely deployable Go binary.
 
+## Install Binary (Recommended)
+
+Install the latest release binary in one command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nige123/go-jmp.nigelhamilton.com/main/scripts/install.sh | bash
+```
+
+The installer:
+
+- detects your OS and CPU architecture
+- downloads the correct GitHub Release asset
+- verifies checksum when available
+- installs `jmp` to `~/.local/bin/jmp`
+
+If `~/.local/bin` is not on your PATH:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Install a specific version (example `v55`):
+
+```bash
+JMP_VERSION=v55 curl -fsSL https://raw.githubusercontent.com/nige123/go-jmp.nigelhamilton.com/main/scripts/install.sh | bash
+```
+
+Manual download option:
+
+- Go to Releases: https://github.com/nige123/go-jmp.nigelhamilton.com/releases
+- Download your matching archive (`linux-amd64`, `linux-arm64`, `darwin-amd64`, `darwin-arm64`, `windows-amd64`, `windows-arm64`)
+- Extract and place the `jmp` binary on your PATH
+
 ## Quick Start
 
 Build locally:
