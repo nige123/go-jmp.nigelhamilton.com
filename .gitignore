@@ -1,0 +1,9 @@
+# Build artifacts
+jmp
+dist/
+
+# Go workspace
+coverage.out
+
+# Editor/system
+.DS_Store
