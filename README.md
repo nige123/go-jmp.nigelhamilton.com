@@ -2,7 +2,9 @@
 
 **Stop copying filenames from terminal output. Start jumping.**
 
-`jmp` searches your codebase and parses command output to find files and line numbers, then opens them directly in your editor. No more copy-pasting paths.
+- **Scan, browse, and edit large codebases quickly** — search across files and jump straight into your editor at the right line
+- **Jump to the next thing in your workflow** — move fast between tasks without losing context
+- **Jump on file references in log files, errors, and command output** — parse any output for filenames and line numbers, then open them instantly
 
 ```bash
 jmp to 'parse error'        # search code, jump to matches
