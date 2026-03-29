@@ -4,6 +4,7 @@ import (
     "fmt"
     "os"
     "strings"
+    "unicode/utf8"
 
     tea "github.com/charmbracelet/bubbletea"
 
@@ -271,7 +272,7 @@ func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
         return u, nil
     case "right", "enter":
         if u.focus == "preview" {
-            if u.previewHit != nil {
+            if u.previewHit != nil && u.Editor != nil {
                 hit := *u.previewHit
                 hit.LineNumber = u.previewLine
                 _ = u.Editor.Edit(u.Title, &hit)
@@ -354,6 +355,16 @@ func (u *UI) View() string {
     if width < 40 {
         width = 80
     }
+    height := u.height
+    if height < 18 {
+        height = 24
+    }
+
+    resultsHeight := 15
+    previewHeight := height - (1 + resultsHeight + 1)
+    if previewHeight < 1 {
+        previewHeight = 1
+    }
 
     title := u.Title
     if u.mode == "input" {
@@ -372,34 +383,50 @@ func (u *UI) View() string {
         footer += "  [o]n cmd"
     }
     footer += "  [h]elp  [q]uit"
+    footer = u.renderFooter(footer, "go-jmp v"+version.VERSION, width)
 
-    versionText := "jmp v" + version.VERSION
-    if len(footer)+len(versionText)+1 < width {
-        spaces := strings.Repeat(" ", width-len(footer)-len(versionText))
-        footer = footer + spaces + versionText
-    }
+    title = fitToWidth(title, width)
 
-    resultLines := make([]string, 0, len(u.Hits))
+    resultLines := make([]string, 0, resultsHeight)
     if len(u.Hits) == 0 {
-        resultLines = append(resultLines, "(no output lines)")
+        resultLines = append(resultLines, fitToWidth("(no output lines)", width))
+        for len(resultLines) < resultsHeight {
+            resultLines = append(resultLines, strings.Repeat(" ", width))
+        }
     } else {
-        for i, hit := range u.Hits {
+        start := u.resultsWindowStart(resultsHeight)
+        for row := 0; row < resultsHeight; row++ {
+            i := start + row
+            if i >= len(u.Hits) {
+                resultLines = append(resultLines, strings.Repeat(" ", width))
+                continue
+            }
+
+            hit := u.Hits[i]
             prefix := "  "
             if u.focus == "results" && i == u.selectedIndex {
                 prefix = "> "
             }
-            resultLines = append(resultLines, prefix+hit.Render())
+            resultLines = append(resultLines, fitToWidth(prefix+hit.Render(), width))
         }
     }
 
-    previewLines := make([]string, 0, len(u.previewLines))
-    for idx, line := range u.previewLines {
+    previewLines := make([]string, 0, previewHeight)
+    previewOffset := u.previewWindowOffset(previewHeight)
+    for row := 0; row < previewHeight; row++ {
+        idx := previewOffset + row
+        if idx >= len(u.previewLines) {
+            previewLines = append(previewLines, strings.Repeat(" ", width))
+            continue
+        }
+
+        line := u.previewLines[idx]
         current := u.previewStart + idx
         prefix := "  "
         if u.focus == "preview" && current == u.previewLine {
             prefix = "> "
         }
-        previewLines = append(previewLines, prefix+line)
+        previewLines = append(previewLines, fitToWidth(prefix+line, width))
     }
 
     return strings.Join([]string{
@@ -408,6 +435,78 @@ func (u *UI) View() string {
         strings.Join(previewLines, "\n"),
         footer,
     }, "\n")
+}
+
+func (u *UI) resultsWindowStart(windowSize int) int {
+    if len(u.Hits) <= windowSize {
+        return 0
+    }
+
+    half := windowSize / 2
+    start := u.selectedIndex - half
+    if start < 0 {
+        start = 0
+    }
+    maxStart := len(u.Hits) - windowSize
+    if start > maxStart {
+        start = maxStart
+    }
+
+    return start
+}
+
+func (u *UI) previewWindowOffset(windowSize int) int {
+    if len(u.previewLines) <= windowSize {
+        return 0
+    }
+
+    target := u.previewLine - u.previewStart
+    if target < 0 {
+        target = 0
+    }
+
+    half := windowSize / 2
+    start := target - half
+    if start < 0 {
+        start = 0
+    }
+    maxStart := len(u.previewLines) - windowSize
+    if start > maxStart {
+        start = maxStart
+    }
+
+    return start
+}
+
+func (u *UI) renderFooter(actions, versionText string, width int) string {
+    versionWidth := utf8.RuneCountInString(versionText)
+    actionsWidth := width - versionWidth - 1
+    if actionsWidth <= 0 {
+        return fitToWidth(versionText, width)
+    }
+
+    actions = fitToWidth(actions, actionsWidth)
+    actionsLen := utf8.RuneCountInString(actions)
+    paddingLeft := 0
+    if actionsWidth > actionsLen {
+        paddingLeft = (actionsWidth - actionsLen) / 2
+    }
+
+    left := strings.Repeat(" ", paddingLeft) + actions
+    left = fitToWidth(left, actionsWidth)
+
+    return left + " " + versionText
+}
+
+func fitToWidth(line string, width int) string {
+    runes := []rune(line)
+    if len(runes) > width {
+        return string(runes[:width])
+    }
+    if len(runes) < width {
+        return line + strings.Repeat(" ", width-len(runes))
+    }
+    return line
 }
 
 func (u *UI) Display() error {
