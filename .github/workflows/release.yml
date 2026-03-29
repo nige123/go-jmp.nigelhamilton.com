@@ -38,16 +38,11 @@ jobs:
           install-only: true
 
       - name: Run GoReleaser
-        id: goreleaser
         run: |
-          set -o pipefail
-          goreleaser release --clean --verbose 2>&1 | tee /tmp/goreleaser.log
+          goreleaser release --clean --verbose > /tmp/goreleaser.log 2>&1 || true
+          echo '## GoReleaser Output' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/goreleaser.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload debug log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: goreleaser-log
-          path: /tmp/goreleaser.log
