@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   goreleaser:
@@ -46,3 +47,13 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post goreleaser log to issue
+        if: always()
+        run: |
+          BODY=$(cat /tmp/goreleaser.log 2>/dev/null || echo "No log file found")
+          gh issue create --title "GoReleaser CI debug log $(date -u +%H:%M:%S)" --body "\`\`\`
+          $BODY
+          \`\`\`" --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
