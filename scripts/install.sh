@@ -31,6 +31,7 @@ esac
 
 case "$ARCH_RAW" in
     x86_64|amd64) ARCH="amd64" ;;
+    i386|i486|i586|i686) ARCH="386" ;;
     aarch64|arm64) ARCH="arm64" ;;
     *) fail "unsupported architecture: $ARCH_RAW" ;;
 esac

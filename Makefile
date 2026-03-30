@@ -22,6 +22,7 @@ clean:
 cross:
 	mkdir -p $(DIST_DIR)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(DIST_DIR)/$(APP_NAME)-linux-amd64 $(CMD_PATH)
+	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(DIST_DIR)/$(APP_NAME)-linux-386 $(CMD_PATH)
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(DIST_DIR)/$(APP_NAME)-linux-arm64 $(CMD_PATH)
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(DIST_DIR)/$(APP_NAME)-darwin-amd64 $(CMD_PATH)
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o $(DIST_DIR)/$(APP_NAME)-darwin-arm64 $(CMD_PATH)

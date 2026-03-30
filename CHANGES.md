@@ -1,5 +1,14 @@
 # CHANGES
 
+## v64 - 2026-03-30
+
+Release focus: installer compatibility for 32-bit x86 Linux hosts.
+
+### Added
+
+- Installer architecture mapping for `i386`/`i486`/`i586`/`i686` to Linux `386` release assets.
+- Linux `386` build target in GoReleaser and local `make cross` pipeline.
+
 ## v55 - 2026-03-29
 
 Release focus: one-command binary installation for end users.

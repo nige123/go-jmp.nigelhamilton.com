@@ -20,6 +20,8 @@ curl -fsSL https://raw.githubusercontent.com/nige123/go-jmp.nigelhamilton.com/ma
 
 This detects your OS/architecture, downloads the right binary, and installs to `~/.local/bin/jmp`.
 
+Supported release targets: Linux (`amd64`, `386`, `arm64`), macOS (`amd64`, `arm64`), Windows (`amd64`).
+
 Add to your PATH if needed:
 
 ```bash
