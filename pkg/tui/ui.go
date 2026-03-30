@@ -367,13 +367,7 @@ func (u *UI) View() string {
         innerWidth = 20
     }
 
-    resultsHeight := 15
-    // Full frame uses: top border, title, sep, results, sep, preview, sep, footer, bottom border.
-    const nonPreviewRows = 8
-    previewHeight := height - (resultsHeight + nonPreviewRows)
-    if previewHeight < 1 {
-        previewHeight = 1
-    }
+    resultsHeight, previewHeight := u.paneHeights(height)
 
     title := u.Title
     if u.mode == "input" {
@@ -505,6 +499,35 @@ func (u *UI) previewWindowOffset(windowSize int) int {
     }
 
     return start
+}
+
+func (u *UI) paneHeights(totalHeight int) (int, int) {
+    // Full frame uses: top border, title, sep, results, sep, preview, sep, footer, bottom border.
+    const nonContentRows = 8
+
+    contentRows := totalHeight - nonContentRows
+    if contentRows < 2 {
+        return 1, 1
+    }
+
+    // Keep results pane at 35% of the total terminal height.
+    resultsHeight := (totalHeight * 35) / 100
+
+    if resultsHeight < 1 {
+        resultsHeight = 1
+    }
+
+    // Leave at least one row for preview.
+    if resultsHeight > contentRows-1 {
+        resultsHeight = contentRows - 1
+    }
+
+    previewHeight := contentRows - resultsHeight
+    if previewHeight < 1 {
+        previewHeight = 1
+    }
+
+    return resultsHeight, previewHeight
 }
 
 func (u *UI) renderFooter(actions, versionText string, width int) string {

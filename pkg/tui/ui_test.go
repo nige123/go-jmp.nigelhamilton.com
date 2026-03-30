@@ -34,6 +34,25 @@ func TestPreviewWindow(t *testing.T) {
     assertWindow(t, ui, 1000, 500, 200, 400, 599)
 }
 
+func TestPaneHeights(t *testing.T) {
+    ui := NewUI("jmp", nil, nil, nil, nil)
+
+    results, preview := ui.paneHeights(24)
+    if results != 8 || preview != 8 {
+        t.Fatalf("expected (8,8) for total height 24, got (%d,%d)", results, preview)
+    }
+
+    results, preview = ui.paneHeights(40)
+    if results != 14 || preview != 18 {
+        t.Fatalf("expected (14,18) for total height 40, got (%d,%d)", results, preview)
+    }
+
+    results, preview = ui.paneHeights(8)
+    if results != 1 || preview != 1 {
+        t.Fatalf("expected (1,1) guardrails for total height 8, got (%d,%d)", results, preview)
+    }
+}
+
 func TestLoadCommandOutput(t *testing.T) {
     sample := []model.Renderable{file.NewHitLater("initial line")}
 

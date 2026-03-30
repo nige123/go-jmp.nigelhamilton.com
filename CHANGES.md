@@ -1,5 +1,14 @@
 # CHANGES
 
+## v65 - 2026-03-30
+
+Release focus: improve TUI usability on smaller terminal sizes.
+
+### Changed
+
+- Results pane height now uses a dynamic 35% split of total terminal height instead of a fixed 15-line block.
+- Preview pane automatically receives the remaining content rows, with minimum-row guardrails for very small heights.
+
 ## v64 - 2026-03-30
 
 Release focus: installer compatibility for 32-bit x86 Linux hosts.
