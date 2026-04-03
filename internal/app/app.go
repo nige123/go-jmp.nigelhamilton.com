@@ -73,9 +73,11 @@ func (a *App) Run() error {
     case "help":
         fmt.Print(usageText)
         return nil
-    case "to":
+    case "in":
         terms := strings.Join(a.args[1:], " ")
         return a.searchInFiles(strings.TrimSpace(terms))
+    case "to":
+        return a.runTo()
     case "on":
         command := strings.TrimSpace(strings.Join(a.args[1:], " "))
         if command == "" {
@@ -122,6 +124,36 @@ func (a *App) editFileAtMatchingLine(filename, searchTerms string) error {
     return a.editor.Edit(a.command, hit)
 }
 
+func (a *App) runTo() error {
+    if len(a.args) < 2 {
+        return fmt.Errorf("jmp to requires a filename")
+    }
+
+    filename := a.args[1]
+    lineNumber := 0
+    if len(a.args) >= 3 {
+        parsed, err := strconv.Atoi(a.args[2])
+        if err == nil {
+            lineNumber = parsed
+        }
+    }
+
+    if lineNumber > 0 {
+        hit := a.finder.FindLineInFile(filename, lineNumber)
+        return a.editor.Edit(a.command, hit)
+    }
+
+    return a.locateFiles(filename)
+}
+
+func (a *App) locateFiles(searchTerms string) error {
+    hits, err := a.finder.FindFilesOnFilesystem(searchTerms)
+    if err != nil {
+        return err
+    }
+    return a.displayHits("jmp to "+searchTerms, hits)
+}
+
 func (a *App) findFilesInCommandOutput(command string) error {
     hits, err := a.finder.FindFilesInCommandOutput(command)
     if err != nil {
@@ -135,7 +167,7 @@ func (a *App) searchInFiles(searchTerms string) error {
     if err != nil {
         return err
     }
-    return a.displayHits("jmp to "+searchTerms, hits)
+    return a.displayHits("jmp in "+searchTerms, hits)
 }
 
 func (a *App) recentJmps(lastNEntries int) error {
@@ -168,21 +200,21 @@ jmp - jump to files in your workflow
 
 Usage:
 
-    jmp                                         -- show most recent
-    jmp to '[<search-terms> ...]'               -- lines matching search terms in files
-    jmp on '<command ...>'                      -- lines from command output (stdout + stderr)
+    jmp                                         -- show most recent jmps
+    jmp in '[<search-terms> ...]'               -- search in files for matching lines
+    jmp to <filename>                           -- locate a file anywhere in the filesystem
+    jmp to <filename> <line-number>             -- jump to a specific line in a file
+    jmp on '<command ...>'                      -- jump on files in command output
 
-    # jmp on files in command output. For example:
-    jmp on locate README                        -- files in the filesystem
+    # jmp on examples:
     jmp on tail /some.log                       -- files mentioned in log files
     jmp on ls                                   -- files in a directory
-    jmp on find .                               -- files returned from the find command
+    jmp on find .                               -- files returned from find
     jmp on git status                           -- files in git
     jmp on perl test.pl                         -- Perl output and errors
     jmp on raku test.raku                       -- Raku output and errors
 
-    jmp config                                  -- edit ~/.jmp config to set the editor
-                                                -- and search commands
+    jmp config                                  -- edit ~/.jmp config
     jmp help                                    -- show this help
 
     jmp edit <filename> [<line-number>]         -- start editing at a line number

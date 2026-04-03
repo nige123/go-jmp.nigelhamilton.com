@@ -12,6 +12,23 @@ func (fakeConfig) GetTemplate(key string, params map[string]string) (string, err
     return "fake", nil
 }
 
+func TestFindFilesOnFilesystem(t *testing.T) {
+    finder := NewWithRunners(fakeConfig{}, func(command string) ([]string, error) {
+        return []string{
+            "/usr/share/doc/README.md",
+            "/home/user/projects/README.md",
+        }, nil
+    }, nil)
+
+    hits, err := finder.FindFilesOnFilesystem("README.md")
+    if err != nil {
+        t.Fatalf("expected no error, got %v", err)
+    }
+    if len(hits) != 2 {
+        t.Fatalf("expected 2 hits, got %d", len(hits))
+    }
+}
+
 func TestFindInFilesIgnoresMalformedLines(t *testing.T) {
     finder := NewWithRunners(fakeConfig{}, func(command string) ([]string, error) {
         return []string{

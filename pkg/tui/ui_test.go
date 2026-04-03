@@ -8,7 +8,7 @@ import (
 )
 
 func TestClampPreviewLine(t *testing.T) {
-    ui := NewUI("jmp to test", nil, []model.Renderable{file.NewHit("testdata/1.txt", "testdata/1.txt", 1, "")}, nil, nil)
+    ui := NewUI("jmp in test", nil, []model.Renderable{file.NewHit("testdata/1.txt", "testdata/1.txt", 1, "")}, nil, nil)
 
     if got := ui.ClampPreviewLine(0, 10); got != 1 {
         t.Fatalf("expected 1, got %d", got)

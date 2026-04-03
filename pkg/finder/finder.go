@@ -100,6 +100,24 @@ func (f *Finder) FindInFiles(searchTerms string) ([]model.Renderable, error) {
     return hits, nil
 }
 
+func (f *Finder) FindFilesOnFilesystem(searchTerms string) ([]model.Renderable, error) {
+    locateCommand, err := f.config.GetTemplate("locate.command.template", map[string]string{"search-terms": searchTerms})
+    if err != nil {
+        return nil, err
+    }
+
+    lines, err := f.runStdout(locateCommand)
+    if err != nil {
+        return nil, err
+    }
+
+    hits := make([]model.Renderable, 0, len(lines))
+    for _, line := range lines {
+        hits = append(hits, file.NewHitLater(line))
+    }
+    return hits, nil
+}
+
 func (f *Finder) FindFilesInCommandOutput(command string) ([]model.Renderable, error) {
     lines, err := f.runCombined(command)
     if err != nil {
