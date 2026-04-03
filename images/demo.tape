@@ -10,16 +10,6 @@ Type "cd /home/s3/go-jmp.nigelhamilton.com"
 Enter
 Sleep 500ms
 
-# Show version
-Type "jmp version"
-Enter
-Sleep 1.5s
-
-# Show help — the three verbs
-Type "jmp help"
-Enter
-Sleep 5s
-
 # jmp in — search in files for keywords
 Type "jmp in 'FindFiles'"
 Enter
@@ -28,6 +18,32 @@ Down
 Sleep 500ms
 Down
 Sleep 500ms
+Down
+Sleep 500ms
+Right
+Sleep 3s
+Type "q"
+Sleep 1s
+
+# jmp on — jump on files in command output
+Type "jmp on 'tree -f'"
+Enter
+Sleep 4s
+Down
+Sleep 500ms
+Down
+Sleep 500ms
+Down
+Sleep 500ms
+Right
+Sleep 3s
+Type "q"
+Sleep 1s
+
+# jmp to — locate a file on the filesystem
+Type "jmp to main.go"
+Enter
+Sleep 4s
 Down
 Sleep 500ms
 Right
