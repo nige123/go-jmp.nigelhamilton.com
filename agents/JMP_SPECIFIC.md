@@ -1,6 +1,6 @@
 # JMP_SPECIFIC.md
 
-Repo-specific guidance for the `jmp` Raku command line utility.
+Repo-specific guidance for the `jmp` Go command line utility.
 
 Because this is a command line tool, agents must be especially careful with behaviour users may script against.
 
