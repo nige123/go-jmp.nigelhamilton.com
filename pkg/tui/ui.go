@@ -17,6 +17,7 @@ import (
 
 type SearcherFunc func(terms string) ([]model.Renderable, error)
 type OutputerFunc func(command string) ([]model.Renderable, error)
+type LocaterFunc func(filename string) ([]model.Renderable, error)
 
 type UI struct {
     Title    string
@@ -24,6 +25,7 @@ type UI struct {
     Hits     []model.Renderable
     Searcher SearcherFunc
     Outputer OutputerFunc
+    Locater  LocaterFunc
 
     selectedIndex int
     focus         string
@@ -31,6 +33,7 @@ type UI struct {
     inputContext  string
     searchBuffer  string
     outputBuffer  string
+    locateBuffer  string
 
     previewLines []string
     previewStart int
@@ -41,13 +44,14 @@ type UI struct {
     height int
 }
 
-func NewUI(title string, editor *editor.Editor, hits []model.Renderable, searcher SearcherFunc, outputer OutputerFunc) *UI {
+func NewUI(title string, editor *editor.Editor, hits []model.Renderable, searcher SearcherFunc, outputer OutputerFunc, locater LocaterFunc) *UI {
     return &UI{
         Title:         title,
         Editor:        editor,
         Hits:          hits,
         Searcher:      searcher,
         Outputer:      outputer,
+        Locater:       locater,
         selectedIndex: 0,
         focus:         "results",
         mode:          "command",
@@ -56,6 +60,7 @@ func NewUI(title string, editor *editor.Editor, hits []model.Renderable, searche
             "Press Right Arrow again in this pane to open the editor.",
 	    "Press [i] to search in files for keywords.",
             "Press [o] to run a command and jump on its output.",
+            "Press [t] to locate a file on the filesystem.",
         },
         previewStart: 1,
         previewLine:  1,
@@ -125,6 +130,27 @@ func (u *UI) LoadSearchResults(terms string) bool {
     return true
 }
 
+func (u *UI) LoadLocateResults(filename string) bool {
+    if u.Locater == nil {
+        return false
+    }
+    trimmed := strings.TrimSpace(filename)
+    if trimmed == "" {
+        return false
+    }
+
+    hits, err := u.Locater(trimmed)
+    if err != nil {
+        return false
+    }
+
+    u.Title = "jmp to " + trimmed
+    u.Hits = hits
+    u.selectedIndex = 0
+    u.focus = "results"
+    return true
+}
+
 func (u *UI) LoadCommandOutput(command string) bool {
     if u.Outputer == nil {
         return false
@@ -171,15 +197,19 @@ func (u *UI) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
             u.LoadSearchResults(u.searchBuffer)
         } else if u.inputContext == "output" {
             u.LoadCommandOutput(u.outputBuffer)
+        } else if u.inputContext == "locate" {
+            u.LoadLocateResults(u.locateBuffer)
         }
         u.searchBuffer = ""
         u.outputBuffer = ""
+        u.locateBuffer = ""
         u.inputContext = ""
         u.mode = "command"
         return u, nil
     case tea.KeyEsc:
         u.searchBuffer = ""
         u.outputBuffer = ""
+        u.locateBuffer = ""
         u.inputContext = ""
         u.mode = "command"
         return u, nil
@@ -187,6 +217,10 @@ func (u *UI) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
         if u.inputContext == "output" {
             if len(u.outputBuffer) > 0 {
                 u.outputBuffer = u.outputBuffer[:len(u.outputBuffer)-1]
+            }
+        } else if u.inputContext == "locate" {
+            if len(u.locateBuffer) > 0 {
+                u.locateBuffer = u.locateBuffer[:len(u.locateBuffer)-1]
             }
         } else {
             if len(u.searchBuffer) > 0 {
@@ -198,6 +232,8 @@ func (u *UI) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
         if len(msg.String()) == 1 {
             if u.inputContext == "output" {
                 u.outputBuffer += msg.String()
+            } else if u.inputContext == "locate" {
+                u.locateBuffer += msg.String()
             } else {
                 u.searchBuffer += msg.String()
             }
@@ -230,6 +266,7 @@ func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
             "PageUp / l     Page through content",
             "i              Search in files (jmp in ...)",
             "o              Jump on files in command output (jmp on ...)",
+            "t              Locate a file on the filesystem (jmp to ...)",
             "q / x          Quit jmp",
             "h / ?          Show this help",
         }
@@ -246,6 +283,13 @@ func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
             u.mode = "input"
             u.inputContext = "output"
             u.outputBuffer = ""
+        }
+        return u, nil
+    case "t":
+        if u.Locater != nil {
+            u.mode = "input"
+            u.inputContext = "locate"
+            u.locateBuffer = ""
         }
         return u, nil
     case "up":
@@ -373,6 +417,8 @@ func (u *UI) View() string {
     if u.mode == "input" {
         if u.inputContext == "output" {
             title = "jmp on " + u.outputBuffer + greenCursor()
+        } else if u.inputContext == "locate" {
+            title = "jmp to " + u.locateBuffer + greenCursor()
         } else {
             title = "jmp in " + u.searchBuffer + greenCursor()
         }
@@ -384,6 +430,9 @@ func (u *UI) View() string {
     }
     if u.Outputer != nil {
         footer += "  [o]n cmd"
+    }
+    if u.Locater != nil {
+        footer += "  [t]o file"
     }
     footer += "  [h]elp  [q]uit"
     footer = u.renderFooter(footer, "go-jmp v"+version.VERSION, innerWidth)

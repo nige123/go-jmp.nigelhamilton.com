@@ -8,7 +8,7 @@ import (
 )
 
 func TestClampPreviewLine(t *testing.T) {
-    ui := NewUI("jmp in test", nil, []model.Renderable{file.NewHit("testdata/1.txt", "testdata/1.txt", 1, "")}, nil, nil)
+    ui := NewUI("jmp in test", nil, []model.Renderable{file.NewHit("testdata/1.txt", "testdata/1.txt", 1, "")}, nil, nil, nil)
 
     if got := ui.ClampPreviewLine(0, 10); got != 1 {
         t.Fatalf("expected 1, got %d", got)
@@ -25,7 +25,7 @@ func TestClampPreviewLine(t *testing.T) {
 }
 
 func TestPreviewWindow(t *testing.T) {
-    ui := NewUI("jmp", nil, nil, nil, nil)
+    ui := NewUI("jmp", nil, nil, nil, nil, nil)
 
     assertWindow(t, ui, 0, 1, 400, 1, 1)
     assertWindow(t, ui, 100, 20, 400, 1, 100)
@@ -35,7 +35,7 @@ func TestPreviewWindow(t *testing.T) {
 }
 
 func TestPaneHeights(t *testing.T) {
-    ui := NewUI("jmp", nil, nil, nil, nil)
+    ui := NewUI("jmp", nil, nil, nil, nil, nil)
 
     results, preview := ui.paneHeights(24)
     if results != 8 || preview != 8 {
@@ -56,7 +56,7 @@ func TestPaneHeights(t *testing.T) {
 func TestLoadCommandOutput(t *testing.T) {
     sample := []model.Renderable{file.NewHitLater("initial line")}
 
-    uiWithoutOutput := NewUI("jmp test", nil, sample, nil, nil)
+    uiWithoutOutput := NewUI("jmp test", nil, sample, nil, nil, nil)
     if uiWithoutOutput.LoadCommandOutput("tail -n 10 /tmp/file.log") {
         t.Fatalf("expected false when no output callback is defined")
     }
@@ -75,6 +75,7 @@ func TestLoadCommandOutput(t *testing.T) {
                 file.NewHitLater("stderr: warning at testdata/1.txt line 1"),
             }, nil
         },
+        nil,
     )
 
     if ui.LoadCommandOutput("   ") {

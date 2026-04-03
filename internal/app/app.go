@@ -190,6 +190,9 @@ func (a *App) displayHits(title string, hits []model.Renderable) error {
         func(command string) ([]model.Renderable, error) {
             return a.finder.FindFilesInCommandOutput(command)
         },
+        func(filename string) ([]model.Renderable, error) {
+            return a.finder.FindFilesOnFilesystem(filename)
+        },
     )
     return ui.Display()
 }
