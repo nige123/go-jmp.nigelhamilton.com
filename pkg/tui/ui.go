@@ -54,7 +54,7 @@ func NewUI(title string, editor *editor.Editor, hits []model.Renderable, searche
         previewLines: []string{
             "Press Right Arrow on a result to preview the file here.",
             "Press Right Arrow again in this pane to open the editor.",
-	    "Press [t] to jump to keyword locations in files.",
+	    "Press [i] to search in files for keywords.",
             "Press [o] to run a command and jump on its output.",
         },
         previewStart: 1,
@@ -118,7 +118,7 @@ func (u *UI) LoadSearchResults(terms string) bool {
         return false
     }
 
-    u.Title = "jmp to " + trimmed
+    u.Title = "jmp in " + trimmed
     u.Hits = hits
     u.selectedIndex = 0
     u.focus = "results"
@@ -228,13 +228,13 @@ func (u *UI) handleCommandKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
             "Left           Return focus from preview to results",
             "Up / Down      Move selection",
             "PageUp / l     Page through content",
-            "t              Jump to text in files (jmp to ...)",
+            "i              Search in files (jmp in ...)",
             "o              Jump on files in command output (jmp on ...)",
             "q / x          Quit jmp",
             "h / ?          Show this help",
         }
         return u, nil
-    case "t":
+    case "i":
         if u.Searcher != nil {
             u.mode = "input"
             u.inputContext = "search"
@@ -374,13 +374,13 @@ func (u *UI) View() string {
         if u.inputContext == "output" {
             title = "jmp on " + u.outputBuffer + greenCursor()
         } else {
-            title = "jmp to " + u.searchBuffer + greenCursor()
+            title = "jmp in " + u.searchBuffer + greenCursor()
         }
     }
 
     footer := "[↑][↓] [←][→] select"
     if u.Searcher != nil {
-        footer += "  [t]o search"
+        footer += "  [i]n search"
     }
     if u.Outputer != nil {
         footer += "  [o]n cmd"
