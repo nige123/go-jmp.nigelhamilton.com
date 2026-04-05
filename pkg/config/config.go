@@ -21,7 +21,7 @@ const defaultConfig = `
 #--------------------------------------------------------------------
 
 # nano — simple terminal editor (Linux, macOS, Windows/WSL)
-editor.command.template   = nano +[-line-number-] "[-filename-]"
+editor.command.template   = nano +[-line-number-] [-filename-]
 
 # VS Code — popular cross-platform editor (Linux, macOS, Windows)
 # editor.command.template   = code -g [-filename-]:[-line-number-] &
@@ -177,6 +177,7 @@ func parseConfigFile(path string) (map[string]string, error) {
         }
         key := strings.TrimSpace(parts[0])
         value := strings.TrimSpace(parts[1])
+        value = strings.ReplaceAll(value, `"`, "")
         if key != "" {
             fields[key] = value
         }

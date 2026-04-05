@@ -47,7 +47,7 @@ func (e *Editor) Edit(jmpCommand string, hit *file.Hit) error {
 
 func (e *Editor) EditAtLine(filename string, lineNumber int) error {
     command, err := e.config.GetTemplate("editor.command.template", map[string]string{
-        "filename":    filename,
+        "filename":    `"` + filename + `"`,
         "line-number": strconv.Itoa(lineNumber),
     })
     if err != nil {
