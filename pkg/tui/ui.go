@@ -362,7 +362,7 @@ func (u *UI) previewSelectedHit() {
 
     lines := strings.Split(strings.ReplaceAll(string(payload), "\r\n", "\n"), "\n")
     if len(lines) == 0 {
-        u.previewLines = []string{"     1:"}
+        u.previewLines = []string{""}
         u.previewLine = 1
         return
     }
@@ -370,7 +370,7 @@ func (u *UI) previewSelectedHit() {
     start, end := u.PreviewWindow(len(lines), resolved.LineNumber, 400)
     rendered := make([]string, 0, end-start+1)
     for i := start; i <= end; i++ {
-        rendered = append(rendered, fmt.Sprintf("%6d: %s", i, lines[i-1]))
+        rendered = append(rendered, lines[i-1])
     }
 
     u.previewLines = rendered
