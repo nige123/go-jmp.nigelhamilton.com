@@ -465,7 +465,7 @@ func (u *UI) View() string {
         footer += "  [t]o file"
     }
     footer += "  [h]elp  [q]uit"
-    footer = u.renderFooter(footer, "go-jmp v"+version.VERSION, innerWidth)
+    footer = u.renderFooter(u.cursorPositionText(), footer, "go-jmp v"+version.VERSION, innerWidth)
 
     title = fitToWidth(title, innerWidth)
 
@@ -609,27 +609,35 @@ func (u *UI) paneHeights(totalHeight int) (int, int) {
     return resultsHeight, previewHeight
 }
 
-func (u *UI) renderFooter(actions, versionText string, width int) string {
+func (u *UI) renderFooter(leftText, actions, versionText string, width int) string {
+    leftWidth := utf8.RuneCountInString(leftText)
     versionWidth := utf8.RuneCountInString(versionText)
-    actionsWidth := width - versionWidth - 1
-    if actionsWidth <= 0 {
+
+    // Degenerate: not enough room for even left + " " + version.
+    // Fall back to version-only (matches pre-existing behaviour).
+    if leftWidth+1+versionWidth > width {
         return fitToWidth(versionText, width)
     }
 
-    actions = clipToWidth(actions, actionsWidth)
-    actionsLen := utf8.RuneCountInString(actions)
-    paddingLeft := 0
-    paddingRight := 0
-    if actionsWidth > actionsLen {
-        totalPadding := actionsWidth - actionsLen
-        paddingLeft = totalPadding / 2
-        paddingRight = totalPadding - paddingLeft
+    // Layout: [left][" "][middle][" "][version]
+    // Middle is where centered actions live (if any room remains).
+    middleWidth := width - leftWidth - versionWidth - 2
+
+    if middleWidth <= 0 {
+        // No room for actions; absorb the slack between left and version.
+        gap := width - leftWidth - versionWidth
+        return leftText + strings.Repeat(" ", gap) + versionText
     }
 
-    left := strings.Repeat(" ", paddingLeft) + actions + strings.Repeat(" ", paddingRight)
-    left = fitToWidth(left, actionsWidth)
+    actions = clipToWidth(actions, middleWidth)
+    actionsLen := utf8.RuneCountInString(actions)
+    totalPadding := middleWidth - actionsLen
+    paddingLeft := totalPadding / 2
+    paddingRight := totalPadding - paddingLeft
 
-    return left + " " + versionText
+    middle := strings.Repeat(" ", paddingLeft) + actions + strings.Repeat(" ", paddingRight)
+
+    return leftText + " " + middle + " " + versionText
 }
 
 func fitToWidth(line string, width int) string {
