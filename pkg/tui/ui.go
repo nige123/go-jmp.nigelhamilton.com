@@ -109,6 +109,36 @@ func (u *UI) PreviewWindow(maxLine, targetLine, windowSize int) (int, int) {
     return start, end
 }
 
+func (u *UI) cursorPositionText() string {
+    if u.focus == "preview" {
+        total := len(u.previewLines)
+        if total < 1 {
+            return "0/0"
+        }
+        current := u.previewLine - u.previewStart + 1
+        if current < 1 {
+            current = 1
+        }
+        if current > total {
+            current = total
+        }
+        return fmt.Sprintf("%d/%d", current, total)
+    }
+
+    total := len(u.Hits)
+    if total < 1 {
+        return "0/0"
+    }
+    current := u.selectedIndex + 1
+    if current < 1 {
+        current = 1
+    }
+    if current > total {
+        current = total
+    }
+    return fmt.Sprintf("%d/%d", current, total)
+}
+
 func (u *UI) LoadSearchResults(terms string) bool {
     if u.Searcher == nil {
         return false

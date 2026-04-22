@@ -106,3 +106,64 @@ func assertWindow(t *testing.T, ui *UI, maxLine, targetLine, windowSize, expecte
         t.Fatalf("expected (%d,%d), got (%d,%d)", expectedStart, expectedEnd, start, end)
     }
 }
+
+func TestCursorPositionTextResults(t *testing.T) {
+    // Empty hits.
+    ui := NewUI("jmp", nil, nil, nil, nil, nil)
+    if got := ui.cursorPositionText(); got != "0/0" {
+        t.Fatalf("empty results: expected \"0/0\", got %q", got)
+    }
+
+    // Five hits, cursor at start.
+    hits := []model.Renderable{
+        file.NewHit("a", "a", 1, ""),
+        file.NewHit("b", "b", 1, ""),
+        file.NewHit("c", "c", 1, ""),
+        file.NewHit("d", "d", 1, ""),
+        file.NewHit("e", "e", 1, ""),
+    }
+    ui = NewUI("jmp", nil, hits, nil, nil, nil)
+    if got := ui.cursorPositionText(); got != "1/5" {
+        t.Fatalf("start of 5: expected \"1/5\", got %q", got)
+    }
+
+    // Middle.
+    ui.selectedIndex = 2
+    if got := ui.cursorPositionText(); got != "3/5" {
+        t.Fatalf("middle of 5: expected \"3/5\", got %q", got)
+    }
+
+    // End.
+    ui.selectedIndex = 4
+    if got := ui.cursorPositionText(); got != "5/5" {
+        t.Fatalf("end of 5: expected \"5/5\", got %q", got)
+    }
+}
+
+func TestCursorPositionTextPreview(t *testing.T) {
+    ui := NewUI("jmp", nil, nil, nil, nil, nil)
+    ui.focus = "preview"
+
+    // Ten loaded lines, cursor at first loaded line.
+    ui.previewLines = make([]string, 10)
+    ui.previewStart = 1
+    ui.previewLine = 1
+    if got := ui.cursorPositionText(); got != "1/10" {
+        t.Fatalf("preview 1/10: got %q", got)
+    }
+
+    // Cursor in middle.
+    ui.previewLine = 7
+    if got := ui.cursorPositionText(); got != "7/10" {
+        t.Fatalf("preview 7/10: got %q", got)
+    }
+
+    // Window that starts mid-file — counter reflects pane-relative
+    // position, not file line number.
+    ui.previewLines = make([]string, 50)
+    ui.previewStart = 100
+    ui.previewLine = 123
+    if got := ui.cursorPositionText(); got != "24/50" {
+        t.Fatalf("preview 24/50 (window at 100, line 123): got %q", got)
+    }
+}
