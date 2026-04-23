@@ -177,11 +177,11 @@ func TestRenderFooterThreeZones(t *testing.T) {
     if len(got) != 40 {
         t.Fatalf("wide: expected length 40, got %d (%q)", len(got), got)
     }
-    if got[:3] != "1/5" {
-        t.Fatalf("wide: expected counter at left, got %q", got[:3])
+    if !strings.HasPrefix(got, "1/5") {
+        t.Fatalf("wide: expected counter at left, got %q", got)
     }
-    if got[len(got)-4:] != "v1.0" {
-        t.Fatalf("wide: expected version at right, got %q", got[len(got)-4:])
+    if !strings.HasSuffix(got, "v1.0") {
+        t.Fatalf("wide: expected version at right, got %q", got)
     }
     if !strings.Contains(got, "actions") {
         t.Fatalf("wide: expected actions in middle, got %q", got)
@@ -197,11 +197,11 @@ func TestRenderFooterMiddleCollapses(t *testing.T) {
     if len(got) != 10 {
         t.Fatalf("narrow: expected length 10, got %d (%q)", len(got), got)
     }
-    if got[:6] != "12/345" {
-        t.Fatalf("narrow: expected counter at left, got %q", got[:6])
+    if !strings.HasPrefix(got, "12/345") {
+        t.Fatalf("narrow: expected counter at left, got %q", got)
     }
-    if got[len(got)-3:] != "v69" {
-        t.Fatalf("narrow: expected version at right, got %q", got[len(got)-3:])
+    if !strings.HasSuffix(got, "v69") {
+        t.Fatalf("narrow: expected version at right, got %q", got)
     }
     if strings.Contains(got, "actions") {
         t.Fatalf("narrow: expected actions to be dropped, got %q", got)
